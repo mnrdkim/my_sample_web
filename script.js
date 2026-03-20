@@ -1,54 +1,79 @@
-// 1. Theme Toggle Logic
-const themeBtn = document.getElementById('theme-toggle');
-themeBtn.addEventListener('click', () => {
+// 1. Theme Toggle
+document.getElementById('theme-toggle').onclick = () => {
     document.body.classList.toggle('light-theme');
-    themeBtn.innerHTML = document.body.classList.contains('light-theme') ? '🌙' : '🌓';
-});
+};
 
-// 2. Smooth Scroll
+// 2. Navigation
 function scrollToSection(id) {
     document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
 }
 
-// 3. Modal Content Data
-const serviceData = {
-    automation: {
-        title: "Workflow Automation",
-        body: "We use Python, Zapier, and AI agents to automate your CRM, email marketing, and data entry. Typical clients see a 40% reduction in operational costs."
-    },
-    software: {
-        title: "Software Consultation",
-        body: "From choosing between AWS and Azure to refactoring legacy code, our senior architects provide 1-on-1 strategy sessions."
-    }
+// 3. Calculator
+const checks = document.querySelectorAll('.service-check');
+const totalLabel = document.getElementById('total-price');
+
+checks.forEach(c => c.onchange = () => {
+    let total = 0;
+    checks.forEach(i => { if(i.checked) total += parseInt(i.dataset.price); });
+    totalLabel.innerText = `$${total}`;
+});
+
+// 4. Calendar Slots
+const slots = ["9:00 AM", "11:00 AM", "2:00 PM", "4:00 PM"];
+const slotBox = document.getElementById('time-slots');
+const bookBtn = document.getElementById('book-btn');
+
+slots.forEach(t => {
+    const btn = document.createElement('div');
+    btn.className = 'slot';
+    btn.innerText = t;
+    btn.onclick = () => {
+        document.querySelectorAll('.slot').forEach(s => s.classList.remove('selected'));
+        btn.classList.add('selected');
+        bookBtn.disabled = false;
+    };
+    slotBox.appendChild(btn);
+});
+
+bookBtn.onclick = () => {
+    document.getElementById('appt-feedback').innerText = "Booking confirmed! Check your email.";
+    document.getElementById('appt-feedback').classList.remove('hidden');
 };
 
-function openModal(type) {
-    const modal = document.getElementById('serviceModal');
-    document.getElementById('modalTitle').innerText = serviceData[type].title;
-    document.getElementById('modalBody').innerText = serviceData[type].body;
-    modal.style.display = "block";
+// 5. Modals
+const data = {
+    automation: { title: "Automation", body: "We build AI agents to handle your repetitive tasks." },
+    software: { title: "Consulting", body: "Architecture reviews and tech-stack modernizing." }
+};
+
+function openModal(t) {
+    document.getElementById('modalTitle').innerText = data[t].title;
+    document.getElementById('modalBody').innerText = data[t].body;
+    document.getElementById('serviceModal').style.display = 'block';
+}
+function closeModal() { document.getElementById('serviceModal').style.display = 'none'; }
+
+// 6. Live Chat
+function toggleChat() {
+    document.getElementById('chat-widget').classList.toggle('chat-closed');
+    document.getElementById('chat-body').classList.toggle('hidden');
 }
 
-function closeModal() {
-    document.getElementById('serviceModal').style.display = "none";
-}
+function sendChat(e) {
+    e.stopPropagation();
+    const input = document.getElementById('chat-input');
+    const history = document.getElementById('chat-history');
+    if(!input.value) return;
 
-// Close modal if clicking outside the box
-window.onclick = function(event) {
-    const modal = document.getElementById('serviceModal');
-    if (event.target == modal) modal.style.display = "none";
-}
+    history.innerHTML += `<div class="message user">${input.value}</div>`;
+    const msg = input.value.toLowerCase();
+    input.value = "";
 
-// 4. Form Handling
-document.getElementById('contactForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const feedback = document.getElementById('formFeedback');
-    feedback.innerText = "Processing your request...";
-    feedback.classList.remove('hidden');
-    
-    // Simulate API Call
     setTimeout(() => {
-        feedback.innerText = "Thanks, " + document.getElementById('name').value + "! Our team will contact you shortly.";
-        this.reset();
-    }, 1500);
-});
+        let reply = "Thanks! A human will be with you shortly.";
+        if(msg.includes("hello")) reply = "Hi! How can MAX Labs help?";
+        if(msg.includes("price")) reply = "Check our estimator above!";
+        history.innerHTML += `<div class="message bot">${reply}</div>`;
+        history.scrollTop = history.scrollHeight;
+    }, 800);
+}
