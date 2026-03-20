@@ -1,79 +1,77 @@
-// 1. Theme Toggle
-document.getElementById('theme-toggle').onclick = () => {
+// 1. Scroll Reveal Animation
+const observerOptions = { threshold: 0.1 };
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+        }
+    });
+}, observerOptions);
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// 2. Theme Toggle with LocalStorage
+const themeBtn = document.getElementById('theme-toggle');
+themeBtn.onclick = () => {
     document.body.classList.toggle('light-theme');
+    const isLight = document.body.classList.contains('light-theme');
+    localStorage.setItem('theme', isLight ? 'light' : 'dark');
 };
 
-// 2. Navigation
-function scrollToSection(id) {
-    document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
-}
-
-// 3. Calculator
-const checks = document.querySelectorAll('.service-check');
-const totalLabel = document.getElementById('total-price');
-
-checks.forEach(c => c.onchange = () => {
-    let total = 0;
-    checks.forEach(i => { if(i.checked) total += parseInt(i.dataset.price); });
-    totalLabel.innerText = `$${total}`;
-});
-
-// 4. Calendar Slots
-const slots = ["9:00 AM", "11:00 AM", "2:00 PM", "4:00 PM"];
-const slotBox = document.getElementById('time-slots');
+// 3. Dynamic Time Slots Generation
+const slots = ["09:00 AM", "11:00 AM", "01:30 PM", "03:00 PM", "04:30 PM"];
+const slotContainer = document.getElementById('time-slots');
 const bookBtn = document.getElementById('book-btn');
 
-slots.forEach(t => {
-    const btn = document.createElement('div');
-    btn.className = 'slot';
-    btn.innerText = t;
-    btn.onclick = () => {
+slots.forEach(time => {
+    const div = document.createElement('div');
+    div.className = 'slot';
+    div.innerText = time;
+    div.onclick = () => {
         document.querySelectorAll('.slot').forEach(s => s.classList.remove('selected'));
-        btn.classList.add('selected');
+        div.classList.add('selected');
         bookBtn.disabled = false;
     };
-    slotBox.appendChild(btn);
+    slotContainer.appendChild(div);
 });
 
+// 4. Booking Success Experience
 bookBtn.onclick = () => {
-    document.getElementById('appt-feedback').innerText = "Booking confirmed! Check your email.";
-    document.getElementById('appt-feedback').classList.remove('hidden');
+    document.getElementById('success-overlay').classList.remove('hidden');
 };
 
-// 5. Modals
-const data = {
-    automation: { title: "Automation", body: "We build AI agents to handle your repetitive tasks." },
-    software: { title: "Consulting", body: "Architecture reviews and tech-stack modernizing." }
-};
-
-function openModal(t) {
-    document.getElementById('modalTitle').innerText = data[t].title;
-    document.getElementById('modalBody').innerText = data[t].body;
-    document.getElementById('serviceModal').style.display = 'block';
-}
-function closeModal() { document.getElementById('serviceModal').style.display = 'none'; }
-
-// 6. Live Chat
-function toggleChat() {
-    document.getElementById('chat-widget').classList.toggle('chat-closed');
-    document.getElementById('chat-body').classList.toggle('hidden');
+function closeSuccess() {
+    document.getElementById('success-overlay').classList.add('hidden');
+    // Reset selections
+    document.querySelectorAll('.slot').forEach(s => s.classList.remove('selected'));
+    bookBtn.disabled = true;
 }
 
-function sendChat(e) {
-    e.stopPropagation();
-    const input = document.getElementById('chat-input');
-    const history = document.getElementById('chat-history');
-    if(!input.value) return;
+// 5. Smooth Scroll Helper
+function scrollToSection(id) {
+    const target = document.getElementById(id);
+    const offset = 80; // Navbar height
+    const bodyRect = document.body.getBoundingClientRect().top;
+    const elementRect = target.getBoundingClientRect().top;
+    const elementPosition = elementRect - bodyRect;
+    const offsetPosition = elementPosition - offset;
 
-    history.innerHTML += `<div class="message user">${input.value}</div>`;
-    const msg = input.value.toLowerCase();
-    input.value = "";
-
-    setTimeout(() => {
-        let reply = "Thanks! A human will be with you shortly.";
-        if(msg.includes("hello")) reply = "Hi! How can MAX Labs help?";
-        if(msg.includes("price")) reply = "Check our estimator above!";
-        history.innerHTML += `<div class="message bot">${reply}</div>`;
-        history.scrollTop = history.scrollHeight;
-    }, 800);
+    window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+    });
 }
+
+// 6. Calculator ROI logic
+const checks = document.querySelectorAll('.service-check');
+const totalDisplay = document.getElementById('total-price');
+
+checks.forEach(c => {
+    c.addEventListener('change', () => {
+        let total = 0;
+        checks.forEach(check => {
+            if(check.checked) total += parseInt(check.dataset.price);
+        });
+        totalDisplay.innerText = `$${total.toLocaleString()}`;
+    });
+});
